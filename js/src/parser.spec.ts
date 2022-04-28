@@ -1,15 +1,15 @@
 import assert from "assert";
 import { parseOrThrow } from "./parser";
-import { ASTExpression } from "./types";
+import { AstExpression } from "./types";
 
-const lit = (type: any, value: any): ASTExpression => ({
+const lit = (type: any, value: any): AstExpression => ({
   type: "literal",
   valueType: type,
   value,
 });
 
-const ref = (ref: string, internal?: true): ASTExpression => {
-  const res: ASTExpression = {
+const ref = (ref: string, internal?: true): AstExpression => {
+  const res: AstExpression = {
     type: "reference",
     ref,
   };

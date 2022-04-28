@@ -6,10 +6,10 @@ import {
 } from "./constants";
 import { OpenAnIssueIfThisOccursError, ParseError, UnpositionableParseError } from "./errors";
 import { lex } from "./lexer";
-import { ASTApplicationExpression, ASTExpression, LexToken } from "./types";
+import { AstApplicationExpression, AstExpression, LexToken } from "./types";
 
 const amalgamationTechniques: {
-  [key: string]: (start: ASTExpression[]) => ASTExpression;
+  [key: string]: (start: AstExpression[]) => AstExpression;
 } = {
   " ": (asts) => ({
     type: "application",
@@ -23,7 +23,7 @@ const amalgamationTechniques: {
 };
 
 type ParseResult = {
-  result: ASTExpression;
+  result: AstExpression;
   remaining: LexToken[];
 };
 
@@ -33,7 +33,7 @@ type ParseContext = {
 
 type Parser = (tokens: LexToken[], ctx: ParseContext) => ParseResult;
 type ParameterizedParser = (
-  sourceItem: ASTExpression,
+  sourceItem: AstExpression,
   tokens: LexToken[],
   ctx: ParseContext
 ) => ParseResult;
@@ -85,7 +85,7 @@ const consumeParenthetical: Parser = (tokens: LexToken[], ctx) => {
 const consumeArray: Parser = (tokens, ctx) => {
   tmatchOrThrowBad("special", "[", tokens[0]);
   let current = tokens.slice(1);
-  let entries: ASTExpression[] = [];
+  let entries: AstExpression[] = [];
   // dirty explicit check for an empty array -- should be fixed up
   while (true) {
     if (tmatch("special", "]", current[0])) {
@@ -118,7 +118,7 @@ const consumeArray: Parser = (tokens, ctx) => {
 const consumeIndexer: Parser = (tokens, ctx) => {
   tmatchOrThrowBad("special", "[", tokens[0]);
   let current = tokens.slice(1);
-  let entries: ASTExpression[] = [];
+  let entries: AstExpression[] = [];
   while (true) {
     // This could be simplified dramaticallly.
     if (tmatch("special", ":", current[0])) {
@@ -152,7 +152,7 @@ const consumeIndexer: Parser = (tokens, ctx) => {
     }
   }
 
-  const app: ASTExpression = {
+  const app: AstExpression = {
     type: "application",
     function: {
       type: "reference",
@@ -170,7 +170,7 @@ const consumeIndexer: Parser = (tokens, ctx) => {
 const consumeStruct: Parser = (tokens, ctx) => {
   tmatchOrThrowBad("special", "{", tokens[0]);
   let current = tokens.slice(1);
-  let entries: { [key: string]: ASTExpression } = {};
+  let entries: { [key: string]: AstExpression } = {};
   while (true) {
     if (tmatch("special", "}", current[0])) {
       current = current.slice(1);
@@ -224,7 +224,7 @@ const consumeDotAccess: ParameterizedParser = (left, tokens, ctx) => {
   }
   ref = current[0].value;
   current = current.slice(1);
-  const result: ASTExpression = {
+  const result: AstExpression = {
     type: "application",
     function: {
       type: "reference",
@@ -238,11 +238,11 @@ const consumeDotAccess: ParameterizedParser = (left, tokens, ctx) => {
 
 // This might be the worst function i've ever written.
 // But at least it's a contained transformation.
-type BinaryExpressionSequence = { items: ASTExpression[]; joiners: string[] };
+type BinaryExpressionSequence = { items: AstExpression[]; joiners: string[] };
 
-const turnBinaryExpressionSequenceIntoASTExpression = (
+const turnBinaryExpressionSequenceIntoAstExpression = (
   bexpseq: BinaryExpressionSequence,
-): ASTExpression => {
+): AstExpression => {
   if (bexpseq.items.length === 0) {
     throw new UnpositionableParseError("Tried to parse empty expression!");
   }
@@ -292,7 +292,7 @@ const turnBinaryExpressionSequenceIntoASTExpression = (
     const newItems = [current.items[0]];
     const newJoiners = [];
     const amalgamationTechnique = amalgamationTechniques[currentExpression]!;
-    let streak: ASTExpression[] = [];
+    let streak: AstExpression[] = [];
     const flushStreak = () => {
       if (streak.length > 0) {
         newItems.push(amalgamationTechnique(streak));
@@ -327,7 +327,7 @@ const turnBinaryExpressionSequenceIntoASTExpression = (
 
 const consumeExpression: Parser = (tokens, ctx) => {
   let current = tokens;
-  let items: ASTExpression[] = [];
+  let items: AstExpression[] = [];
   let joiners: LexToken[] = [];
 
   const itemPushGuard = (token: LexToken) => {
@@ -350,11 +350,11 @@ const consumeExpression: Parser = (tokens, ctx) => {
   while (current.length > 0) {
     let next = current[0];
 
-    // --- NASTY HACK ALERT ---
+    // --- NAstY HACK ALERT ---
     // Weird dirty hack that should be sorted out.
     // only if binary expression WOULD throw, parse as a unary as a "backup"
     let hackyUnaryPostProcess:
-      | ((ast: ASTExpression) => ASTExpression)
+      | ((ast: AstExpression) => AstExpression)
       | undefined = undefined;
     if (isUnExp(next) && binExpDoesntMakeSense()) {
       // turn all further unaries into a big ol' stack.
@@ -407,8 +407,8 @@ const consumeExpression: Parser = (tokens, ctx) => {
         const { result: app, remaining } = consumeIndexer(current, ctx);
         items[items.length - 1] = {
           type: "application",
-          function: (app as ASTApplicationExpression).function,
-          arguments: (app as ASTApplicationExpression).arguments.concat([
+          function: (app as AstApplicationExpression).function,
+          arguments: (app as AstApplicationExpression).arguments.concat([
             items[items.length - 1],
           ]),
         };
@@ -448,7 +448,7 @@ const consumeExpression: Parser = (tokens, ctx) => {
     }
   }
 
-  let resolvedSequence = turnBinaryExpressionSequenceIntoASTExpression({
+  let resolvedSequence = turnBinaryExpressionSequenceIntoAstExpression({
     items,
     // We know the below is a string because we only add specials
     joiners: joiners.map((joiner) => joiner.value as string),
@@ -459,8 +459,8 @@ const consumeExpression: Parser = (tokens, ctx) => {
     const { result: app, remaining } = consumeIndexer(current, ctx);
     resolvedSequence = {
       type: "application",
-      function: (app as ASTApplicationExpression).function,
-      arguments: (app as ASTApplicationExpression).arguments.concat([
+      function: (app as AstApplicationExpression).function,
+      arguments: (app as AstApplicationExpression).arguments.concat([
         resolvedSequence,
       ]),
     };
@@ -468,7 +468,7 @@ const consumeExpression: Parser = (tokens, ctx) => {
   }
 
   return {
-    result: turnBinaryExpressionSequenceIntoASTExpression({
+    result: turnBinaryExpressionSequenceIntoAstExpression({
       items,
       // We know the below is a string because we only add specials
       joiners: joiners.map((joiner) => joiner.value as string),
@@ -477,7 +477,7 @@ const consumeExpression: Parser = (tokens, ctx) => {
   };
 };
 
-function parseQuery(tokens: LexToken[], ctx: ParseContext): ASTExpression {
+function parseQuery(tokens: LexToken[], ctx: ParseContext): AstExpression {
   const { result, remaining } = consumeExpression(tokens, ctx);
   if (remaining.length !== 0) {
     throw new ParseError(
@@ -489,7 +489,7 @@ function parseQuery(tokens: LexToken[], ctx: ParseContext): ASTExpression {
   return result;
 }
 
-function parse(raw: string): ASTExpression {
+function parse(raw: string): AstExpression {
   const lexed = lex(raw);
   const ctx: ParseContext = {
     rawQuery: raw,

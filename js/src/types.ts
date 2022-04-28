@@ -1,5 +1,5 @@
 // Parser Types
-export type ASTLiteralExpression =
+export type AstLiteralExpression =
   | {
     type: "literal";
     valueType: "string";
@@ -18,7 +18,7 @@ export type ASTLiteralExpression =
   | {
     type: "literal";
     valueType: "array";
-    value: Array<ASTExpression>;
+    value: Array<AstExpression>;
   }
   | {
     type: "literal";
@@ -28,31 +28,31 @@ export type ASTLiteralExpression =
   | {
     type: "literal";
     valueType: "object";
-    value: { [key: string]: ASTExpression };
+    value: { [key: string]: AstExpression };
   };
 
-export type ASTPipelineExpression = {
+export type AstPipelineExpression = {
   type: "pipeline";
-  stages: ASTExpression[];
+  stages: AstExpression[];
 };
 
-export type ASTReferenceExpression = {
+export type AstReferenceExpression = {
   type: "reference";
   ref: string;
   internal?: true;
 };
 
-export type ASTApplicationExpression = {
+export type AstApplicationExpression = {
   type: "application";
-  function: ASTExpression;
-  arguments: ASTExpression[];
+  function: AstExpression;
+  arguments: AstExpression[];
 };
 
-export type ASTExpression =
-  | ASTApplicationExpression
-  | ASTReferenceExpression
-  | ASTPipelineExpression
-  | ASTLiteralExpression;
+export type AstExpression =
+  | AstApplicationExpression
+  | AstReferenceExpression
+  | AstPipelineExpression
+  | AstLiteralExpression;
 
 /* Runtime types */
 export type RuntimeValue =
@@ -82,11 +82,11 @@ export type Closure = {
 export type Stack = Closure[];
 
 export type ExecutionFunction = (
-  exp: ASTExpression,
+  exp: AstExpression,
   stack: Stack
 ) => RuntimeValue;
 export type BuiltinFunction = (
-  args: ASTExpression[],
+  args: AstExpression[],
   stack: Stack,
   executeInner: ExecutionFunction
 ) => RuntimeValue;

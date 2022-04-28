@@ -18,7 +18,7 @@ describe("builtin js specifics", () => {
   });
 
   describe("#match/#regex", () => {
-    it("doesn't reverse the underlying AST when using the =~ operator", () => {
+    it("doesn't reverse the underlying Ast when using the =~ operator", () => {
       assert.deepStrictEqual(
         execute(parseOrThrow('[1, 2] | map "hello" =~ (regex "he..o")'), null),
         [

@@ -3,10 +3,10 @@ import { RuntimeError } from "./errors";
 import { getProperties, getType } from "./runtimeValues";
 import { pushRuntimeValueToStack } from "./stackManip";
 import {
-  ASTApplicationExpression,
-  ASTExpression,
-  ASTLiteralExpression,
-  ASTReferenceExpression,
+  AstApplicationExpression,
+  AstExpression,
+  AstLiteralExpression,
+  AstReferenceExpression,
   Closure,
   ExecutionFunction,
   RuntimeValue
@@ -69,7 +69,7 @@ export const outputGardenWall = (data: unknown) => {
   }
 };
 
-export const execute = (node: ASTExpression, variables: unknown) => {
+export const execute = (node: AstExpression, variables: unknown) => {
   const data = inputGardenWall(variables);
   const initialStack = [builtins, {
     $: Object.assign({}, builtins, { "@": data }),
@@ -83,7 +83,7 @@ export const execute = (node: ASTExpression, variables: unknown) => {
 };
 
 const executeInner: ExecutionFunction = (
-  statement: ASTExpression,
+  statement: AstExpression,
   stack: Closure[]
 ): RuntimeValue => {
   switch (statement.type) {
@@ -97,8 +97,8 @@ const executeInner: ExecutionFunction = (
       let last: RuntimeValue = executeInner(statement.stages[0], stack);
       for (let i = 1; i < statement.stages.length; i++) {
         const stage = statement.stages[i];
-        let app: ASTApplicationExpression;
-        const atRef: ASTExpression = { type: "reference", ref: "@" };
+        let app: AstApplicationExpression;
+        const atRef: AstExpression = { type: "reference", ref: "@" };
         if (stage.type === "application") {
           app = {
             type: "application",
@@ -119,7 +119,7 @@ const executeInner: ExecutionFunction = (
 };
 
 const executeLiteral = (
-  statement: ASTLiteralExpression,
+  statement: AstLiteralExpression,
   stack: Closure[]
 ): RuntimeValue => {
   switch (statement.valueType) {
@@ -129,7 +129,7 @@ const executeLiteral = (
     case "null":
       return statement.value;
     case "array":
-      return statement.value.map((exp: ASTExpression) =>
+      return statement.value.map((exp: AstExpression) =>
         executeInner(exp, stack)
       );
     case "object": {
@@ -143,7 +143,7 @@ const executeLiteral = (
 };
 
 const executeReference = (
-  statement: ASTReferenceExpression,
+  statement: AstReferenceExpression,
   inputStack: Closure[]
 ): RuntimeValue => {
   const stack = statement.internal ? [builtins] : inputStack;
@@ -162,7 +162,7 @@ const executeReference = (
 };
 
 const executeApplication = (
-  statement: ASTApplicationExpression,
+  statement: AstApplicationExpression,
   stack: Closure[]
 ): RuntimeValue => {
   const fn = executeInner(statement.function, stack);
